@@ -93,8 +93,7 @@ console.log(element);
       var result = {};
 
       // adding data to result object
-      result.title = $(this).text();
-      // result.summary = $(this).children("title").text();
+      result.title = $(this).children("a").attr("title");
       result.link  = $(this).children("a").attr("href");
       
       // new entry using article model
@@ -116,7 +115,54 @@ console.log(element);
   });
 });
 
+// GET articles scraped from the DB
+app.get("/articles", function(req, res) {
+  // grab docs in Articles array
+  Article.find({}, function(error, doc) {
+    if (error) {
+      console.log(error);
+    } else {
+      res.json(doc);
+    }
+  });
+});
 
+// GET articles by it's ID
+
+app.get("/articles/:id", function(req, res) {
+  // find matching article in DB with query using ID
+  Article.findOne({ "_id": req.params.id})
+  // populate comments with note
+  .populate("comment")
+  // execute query
+  .exec(function(error, doc) {
+    if (error) {
+      console.log(error)
+    } else {
+      res.json(doc);
+    }
+  });
+});
+
+// Save an article
+app.post("/articles/save/:id", function(req, res) {
+  // use id to find and update boolean
+  Article.findOneAndUpdate({ "_id": req.params.id}, {"saved": true})
+
+  .exec(function(err, doc) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(doc);
+    }
+  });
+});
+
+// Delete Artcle
+
+// Create Comment
+
+// Delete Comment
 
 
 
