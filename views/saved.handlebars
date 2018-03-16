@@ -1,9 +1,9 @@
-<!--Homepage-->
+<!--Saved Articles-->
 
 <div class="container">
     <div class="col-md-12 jumbotron">
         <div class="text-center">
-            <h1>Good News Mongo Scraper</h1>
+            <h1>Saved Articles</h1>
         </div>
     </div>
 
@@ -19,15 +19,18 @@
                 <a href={{this.link}} targer="_blank">{{this.link}}</a>
                 <br>
                 <br>
-                <button type="button" class="btn btn-success save" data-id={{this._id}}>Save Article</button>
+                <button type="button" class="btn btn-success addComment" data-toggle="modal" data-target="#commentModal{{this._id}}" data-id={{this._id}}>Add a Comment</button>
+                <button type="button" class="btn btn-danger delete" data-id={{this._id}}>Delete</button>
             </div>
         </div>
         {{/each}} {{else}}
         <div class="pandel panel-default">
             <div class="panel-body">
-                <h4>Sorry, no new articles</h4>
+                <h4>No saved articles</h4>
             </div>
         </div>
         {{/if}}
     </div>
 </div>
+
+{{!-- Comment Modal --}} {{#each article}} {{>comments-modal}} {{/each}}
