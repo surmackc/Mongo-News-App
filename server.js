@@ -25,7 +25,9 @@ var app = express();
 // Use morgan logger for logging requests
 app.use(logger("dev"));
 // Use body-parser for handling form submissions
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 // Use express.static to serve the public folder as a static directory
 app.use(express.static("public"));
 
@@ -47,20 +49,22 @@ mongoose.connect("mongodb://localhost/myapp");
 var db = mongoose.connection;
 
 // Show any mongoose errors
-db.on("error", function(error) {
+db.on("error", function (error) {
   console.log("Mongoose Error: ", error);
 });
 
 // Once logged in to the db through mongoose, log a success message
-db.once("open", function() {
+db.once("open", function () {
   console.log("Mongoose connection successful.");
 });
 
 
 // // Routes
 // GET to render handlebars pages
-app.get("/", function (req,res) {
-  Article.find({"saved" : false}, function (error, data) {
+app.get("/", function (req, res) {
+  Article.find({
+    "saved": false
+  }, function (error, data) {
     var hbsObject = {
       article: data
     };
@@ -69,8 +73,10 @@ app.get("/", function (req,res) {
   });
 });
 
-app.get("/saved", function(req, res) {
-  Article.find({"saved" : true}).populate("comments").exec(function (error, articles) {
+app.get("/saved", function (req, res) {
+  Article.find({
+    "saved": true
+  }).populate("comments").exec(function (error, articles) {
     var hbsObject = {
       article: articles
     };
@@ -79,29 +85,29 @@ app.get("/saved", function(req, res) {
 });
 
 // GET to scrape website
-app.get("/scrape", function(req, res) {
+app.get("/scrape", function (req, res) {
   // grab body of html using request
-  request("https://www.goodnewsnetwork.org/", function(error, response, html) {
+  request("https://www.goodnewsnetwork.org/", function (error, response, html) {
     // load into cherrio and save as $
     var $ = cheerio.load(html);
     // grabbing articles and data
-    
-    $("h3").each(function(i, element) {
-      
-console.log(element);
+
+    $("h3").each(function (i, element) {
+
+      console.log(element);
       // save empty result object
       var result = {};
 
       // adding data to result object
       result.title = $(this).children("a").attr("title");
-      result.link  = $(this).children("a").attr("href");
-      
+      result.link = $(this).children("a").attr("href");
+
       // new entry using article model
       var entry = new Article(result);
       console.log(entry);
 
       // save to DB
-      entry.save(function(err, doc) {
+      entry.save(function (err, doc) {
         if (err) {
           console.log(err);
         } else {
@@ -116,9 +122,9 @@ console.log(element);
 });
 
 // GET articles scraped from the DB
-app.get("/articles", function(req, res) {
+app.get("/articles", function (req, res) {
   // grab docs in Articles array
-  Article.find({}, function(error, doc) {
+  Article.find({}, function (error, doc) {
     if (error) {
       console.log(error);
     } else {
@@ -129,40 +135,131 @@ app.get("/articles", function(req, res) {
 
 // GET articles by it's ID
 
-app.get("/articles/:id", function(req, res) {
+app.get("/articles/:id", function (req, res) {
   // find matching article in DB with query using ID
-  Article.findOne({ "_id": req.params.id})
-  // populate comments with note
-  .populate("comment")
-  // execute query
-  .exec(function(error, doc) {
-    if (error) {
-      console.log(error)
-    } else {
-      res.json(doc);
-    }
-  });
+  Article.findOne({
+      "_id": req.params.id
+    })
+    // populate comments with note
+    .populate("comment")
+    // execute query
+    .exec(function (error, doc) {
+      if (error) {
+        console.log(error)
+      } else {
+        res.json(doc);
+      }
+    });
 });
 
 // Save an article
-app.post("/articles/save/:id", function(req, res) {
+app.post("/articles/save/:id", function (req, res) {
   // use id to find and update boolean
-  Article.findOneAndUpdate({ "_id": req.params.id}, {"saved": true})
+  Article.findOneAndUpdate({
+      "_id": req.params.id
+    }, {
+      "saved": true
+    })
 
-  .exec(function(err, doc) {
-    if (err) {
-      console.log(err);
-    } else {
-      res.send(doc);
-    }
-  });
+    .exec(function (err, doc) {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(doc);
+      }
+    });
 });
 
 // Delete Artcle
 
+app.post("/articles/delete/:id", function (req, res) {
+  // use id to update boolean and empty comments array
+  Article.findOneAndUpdate({
+      "_id": req.params.id
+    }, {
+      "saved": false,
+      "comments": []
+    })
+
+    .exec(function (err, doc) {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(doc);
+      }
+    });
+});
+
 // Create Comment
 
+app.post("/comments/save/:id", function (req, res) {
+  // create new comment using model and pass req.body to it
+  var newComment = new Comment({
+    body: req.body.text,
+    article: req.params.id
+  });
+  console.log(req.body)
+  // save to DB
+  newComment.save(function (error, comment) {
+    if (error) {
+      console.log(error);
+    } else {
+      // use article id to update comments
+      Article.findOneAndUpdate({
+          "_id": req.params.id
+        }, {
+          $push: {
+            "comments": comment
+          }
+        })
+
+        .exec(function (err) {
+          if (err) {
+            console.log(err);
+          } else {
+            // send to client
+            res.send(comment);
+          }
+        });
+    }
+  });
+});
+
+
 // Delete Comment
+
+app.delete("/comments/delete/:comment_id/:article_id", function (req, res) {
+// use comment id to find and delete
+  Comment.findOneAndRemove({
+    "_id": req.params.comment_id
+  }, function (err) {
+    if (err) {
+      console.log(err);
+    } else {
+      Article.findOneAndUpdate({
+          "_id": req.params.article_id
+        }, {
+          $pull: {
+            "comments": req.params.comment_id
+          }
+        })
+        // exec query and either send error or response text
+        .exec(function (err) {
+          if (err) {
+            console.log(err);
+            res.send(err);
+          } else {
+            res.send("Comment Deleted");
+          }
+        });
+    }
+  });
+});
+
+// // Start the server
+app.listen(PORT, function () {
+  console.log("App running on port " + PORT + "!");
+});
 
 
 
@@ -262,8 +359,3 @@ app.post("/articles/save/:id", function(req, res) {
 //       res.json(err);
 //     });
 // });
-
-// // Start the server
-app.listen(PORT, function() {
-console.log("App running on port " + PORT + "!");
-});
