@@ -10,11 +10,11 @@
                 <h4 class="modal-title">Comments for {{this.title}}</h4>
             </div>
             <div class="modal-body">
-                {{#if this.notes}} {{#each this.notes}}
+                {{#if this.comments}} {{#each this.comments}}
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <p class="previousComments">{{this.body}}</p>
-                        <button type="button" class="btn btn-danger deleteComment" data-note-id={{this._id}} data-article-id={{this.article}}>CLOSE</button>
+                        <button type="button" class="btn btn-danger deleteComment" data-comment-id={{this._id}} data-article-id={{this.article}}>X</button>
                     </div>
                 </div>
                 {{/each}} {{else}}
@@ -25,7 +25,7 @@
                 </div>
                 {{/if}}
                 <div class="form-group">
-                    <textarea id="commentText{{this._id}}" class="form-control" row="4" placeholder="New Comment"></textarea>
+                    <textarea id="commentText{{this._id}}" class="form-control" rows="4" placeholder="New Comment"></textarea>
                 </div>
             </div>
             <div class="modal-footer">

@@ -147,7 +147,7 @@ app.get("/articles/:id", function (req, res) {
       "_id": req.params.id
     })
     // populate comments with comment
-    .populate("comment")
+    .populate("comments")
     // execute query
     .exec(function (error, doc) {
       if (error) {
@@ -222,8 +222,10 @@ app.post("/comments/save/:id", function (req, res) {
         .exec(function (err) {
           if (err) {
             console.log(err);
+            res.send(err);
           } else {
             // send to client
+            console.log(comment);
             res.send(comment);
           }
         });
@@ -241,6 +243,7 @@ app.delete("/comments/delete/:comment_id/:article_id", function (req, res) {
   }, function (err) {
     if (err) {
       console.log(err);
+      res.send(err);
     } else {
       Article.findOneAndUpdate({
           "_id": req.params.article_id
