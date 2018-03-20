@@ -57,6 +57,7 @@ $(".saveComment").on("click", function() {
             url: "/articles/delete/" + thisId
         }).done(function(data) {
             window.location - "/saved"
+            location.reload();
         })
     });
 
