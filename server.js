@@ -104,15 +104,16 @@ app.get("/scrape", function (req, res) {
     var $ = cheerio.load(html);
     // grabbing articles and data
 
-    $("h3").each(function (i, element) {
+    $(".td_module_1").each(function (i, element) {
 
-      console.log(element);
       // save empty result object
       var result = {};
 
       // adding data to result object
-      result.title = $(this).children("a").attr("title");
-      result.link = $(this).children("a").attr("href");
+      result.title = $(this).children("h3").children("a").attr("title");
+      result.link = $(this).children("h3").children("a").attr("href");
+      result.date = $(this).children(".td-module-meta-info").children(".td-post-date").children(".entry-date").text();
+    
 
       // new entry using article model
       var entry = new Article(result);
